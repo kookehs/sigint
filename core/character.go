@@ -62,44 +62,44 @@ func ParseAlliance(payload []byte, out *string) bool {
 	return true
 }
 
-func ParseCharacter(payload []byte, character *Character) *Character {
-	if payload == nil {
+func ParseCharacter(payload []byte, out *Character) *Character {
+	if payload == nil || out == nil {
 		return nil
 	}
 
-	if character == nil {
-		character = new(Character)
-	}
-
-	if !ParseID(payload, &character.ID) {
+	if !ParseID(payload, &out.ID) {
 		return nil
 	}
 
-	if !ParseName(payload, &character.Name) {
+	if !ParseName(payload, &out.Name) {
 		return nil
 	}
 
-	ParseGuild(payload, &character.Guild)
-	ParseAlliance(payload, &character.Alliance)
-	ParsePosition(payload, &character.Position)
-	return character
+	ParseGuild(payload, &out.Guild)
+	ParseAlliance(payload, &out.Alliance)
+	ParsePosition(payload, &out.Position)
+	return out
 }
 
 func ParseCharacters(payload []byte, out map[uint32]Character) map[uint32]Character {
-	characters := CharacterStructureRegExp.FindAllSubmatch(payload, -1)
-
-	if characters == nil {
+	if payload == nil || out == nil {
 		return nil
 	}
 
-	for i := 0; i < len(characters); i++ {
-		if len(characters[i]) <= 1 {
+	matches := CharacterStructureRegExp.FindAllSubmatch(payload, -1)
+
+	if matches == nil {
+		return nil
+	}
+
+	for i := 0; i < len(matches); i++ {
+		if len(matches[i]) <= 1 {
 			continue
 		}
 
 		character := Character{}
 
-		if ParseCharacter(characters[i][1], &character) != nil {
+		if ParseCharacter(matches[i][1], &character) != nil {
 			out[character.ID] = character
 		}
 	}

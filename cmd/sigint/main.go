@@ -57,14 +57,14 @@ func main() {
 						continue
 					}
 
-					code := make([]byte, hex.DecodedLen(len(events[i][1])))
-					_, err = hex.Decode(code, events[i][1])
+					data := make([]byte, hex.DecodedLen(len(events[i][1])))
+					_, err = hex.Decode(data, events[i][1])
 
 					if err != nil {
 						continue
 					}
 
-					eventCode := binary.BigEndian.Uint16(code)
+					eventCode := binary.BigEndian.Uint16(data)
 
 					switch eventCode {
 					case event.Leave:
