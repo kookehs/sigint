@@ -3,12 +3,13 @@ package main
 import (
 	"encoding/binary"
 	"encoding/hex"
-	"fmt"
 	"log"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
+	"github.com/kookehs/sigint/core"
+	"github.com/kookehs/sigint/event"
 )
 
 const (
@@ -26,7 +27,7 @@ func main() {
 	}
 
 	defer handle.Close()
-	characters := make(map[uint32]Character)
+	characters := make(map[uint32]core.Character)
 	packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
 
 	for packet := range packetSource.Packets() {
@@ -45,7 +46,7 @@ func main() {
 				payload := make([]byte, hex.EncodedLen(len(udp.Payload)))
 				hex.Encode(payload, udp.Payload)
 
-				events := EventCodeRegExp.FindAllSubmatch(payload, -1)
+				events := event.CodeRegExp.FindAllSubmatch(payload, -1)
 
 				if events == nil {
 					continue
@@ -56,19 +57,24 @@ func main() {
 						continue
 					}
 
-					event := make([]byte, hex.DecodedLen(len(events[i][1])))
-					_, err = hex.Decode(event, events[i][1])
+					code := make([]byte, hex.DecodedLen(len(events[i][1])))
+					_, err = hex.Decode(code, events[i][1])
 
 					if err != nil {
 						continue
 					}
 
-					eventCode := binary.BigEndian.Uint16(event)
+					eventCode := binary.BigEndian.Uint16(code)
 
 					switch eventCode {
-					case 23:
-						ParseCharacters(payload, characters)
-						fmt.Println(characters)
+					case event.Leave:
+						event.ParseLeave(payload, characters)
+					case event.NewMob:
+					case event.CastSpell:
+					case event.NewCharacter:
+						core.ParseCharacters(payload, characters)
+					case event.NewSimpleHarvestableObjectList:
+					case event.PlayerCounts:
 					}
 				}
 			}
