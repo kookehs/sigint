@@ -27,6 +27,7 @@ func main() {
 	}
 
 	defer handle.Close()
+	mobs := make(map[uint32]core.Mob)
 	characters := make(map[uint32]core.Character)
 	packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
 
@@ -70,6 +71,7 @@ func main() {
 					case event.Leave:
 						event.ParseLeave(payload, characters)
 					case event.NewMob:
+						core.ParseMobs(payload, mobs)
 					case event.CastSpell:
 					case event.NewCharacter:
 						core.ParseCharacters(payload, characters)

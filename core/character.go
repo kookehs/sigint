@@ -1,20 +1,16 @@
 package core
 
 import (
-	"encoding/binary"
-	"encoding/hex"
-	"log"
-	"math"
 	"regexp"
 )
 
 const (
-	CharacterAllianceFormat  = `7300[a-z0-9]{2}([a-z0-9]{4,10}?)2d78`
-	CharacterIDFormat        = `69([a-z0-9]{8})0173`
-	CharacterGuildFormat     = `7300[a-z0-9]{2}([a-z0-9]{6,60}?)0978`
-	CharacterNameFormat      = `7300[a-z0-9]{2}([a-z0-9]{6,32}?)02(?:62|79)`
+	CharacterAllianceFormat  = `2c7300[a-z0-9]{2}([a-z0-9]{4,10}?)2d78`
+	CharacterIDFormat        = `0069([a-z0-9]{8})0173`
+	CharacterGuildFormat     = `087300[a-z0-9]{2}([a-z0-9]{6,60}?)0978`
+	CharacterNameFormat      = `017300[a-z0-9]{2}([a-z0-9]{6,32}?)02(?:62|79)`
 	CharacterPositionFormat  = `66([a-z0-9]{8})([a-z0-9]{8})0e79`
-	CharacterStructureFormat = `(69.*?fc6b0017)`
+	CharacterStructureFormat = `(0069.*?fc6b0017)`
 )
 
 var (
@@ -26,11 +22,6 @@ var (
 	CharacterStructureRegExp = regexp.MustCompile(CharacterStructureFormat)
 )
 
-type Point struct {
-	X float32 `json:"x"`
-	Y float32 `json:"y"`
-}
-
 type Character struct {
 	ID       uint32 `json:"id"`
 	Name     string `json:"name"`
@@ -39,7 +30,7 @@ type Character struct {
 	Position Point  `json:"point"`
 }
 
-func ParseAlliance(payload []byte, out *string) bool {
+func ParseCharacterAlliance(payload []byte, out *string) bool {
 	if payload == nil || out == nil {
 		return false
 	}
@@ -50,16 +41,7 @@ func ParseAlliance(payload []byte, out *string) bool {
 		return false
 	}
 
-	data := make([]byte, hex.DecodedLen(len(match[1])))
-	_, err := hex.Decode(data, match[1])
-
-	if err != nil {
-		log.Println(err)
-		return false
-	}
-
-	*out = string(data)
-	return true
+	return ParseString(match, out)
 }
 
 func ParseCharacter(payload []byte, out *Character) *Character {
@@ -67,18 +49,74 @@ func ParseCharacter(payload []byte, out *Character) *Character {
 		return nil
 	}
 
-	if !ParseID(payload, &out.ID) {
+	if !ParseCharacterID(payload, &out.ID) {
 		return nil
 	}
 
-	if !ParseName(payload, &out.Name) {
+	if !ParseCharacterName(payload, &out.Name) {
 		return nil
 	}
 
-	ParseGuild(payload, &out.Guild)
-	ParseAlliance(payload, &out.Alliance)
-	ParsePosition(payload, &out.Position)
+	ParseCharacterGuild(payload, &out.Guild)
+	ParseCharacterAlliance(payload, &out.Alliance)
+	ParseCharacterPosition(payload, &out.Position)
 	return out
+}
+
+func ParseCharacterID(payload []byte, out *uint32) bool {
+	if payload == nil || out == nil {
+		return false
+	}
+
+	match := CharacterIDRegExp.FindSubmatch(payload)
+
+	if match == nil {
+		return false
+	}
+
+	return ParseUint32(match, out)
+}
+
+func ParseCharacterGuild(payload []byte, out *string) bool {
+	if payload == nil || out == nil {
+		return false
+	}
+
+	match := CharacterGuildRegExp.FindSubmatch(payload)
+
+	if match == nil {
+		return false
+	}
+
+	return ParseString(match, out)
+}
+
+func ParseCharacterName(payload []byte, out *string) bool {
+	if payload == nil || out == nil {
+		return false
+	}
+
+	match := CharacterNameRegExp.FindSubmatch(payload)
+
+	if match == nil {
+		return false
+	}
+
+	return ParseString(match, out)
+}
+
+func ParseCharacterPosition(payload []byte, out *Point) bool {
+	if payload == nil || out == nil {
+		return false
+	}
+
+	match := CharacterPositionRegExp.FindSubmatch(payload)
+
+	if match == nil {
+		return false
+	}
+
+	return ParsePoint(match, out)
 }
 
 func ParseCharacters(payload []byte, out map[uint32]Character) map[uint32]Character {
@@ -105,108 +143,4 @@ func ParseCharacters(payload []byte, out map[uint32]Character) map[uint32]Charac
 	}
 
 	return out
-}
-
-func ParseID(payload []byte, out *uint32) bool {
-	if payload == nil || out == nil {
-		return false
-	}
-
-	match := CharacterIDRegExp.FindSubmatch(payload)
-
-	if match == nil {
-		return false
-	}
-
-	data := make([]byte, hex.DecodedLen(len(match[1])))
-	_, err := hex.Decode(data, match[1])
-
-	if err != nil {
-		log.Println(err)
-		return false
-	}
-
-	*out = binary.BigEndian.Uint32(data)
-	return true
-}
-
-func ParseGuild(payload []byte, out *string) bool {
-	if payload == nil || out == nil {
-		return false
-	}
-
-	match := CharacterGuildRegExp.FindSubmatch(payload)
-
-	if match == nil {
-		return false
-	}
-
-	data := make([]byte, hex.DecodedLen(len(match[1])))
-	_, err := hex.Decode(data, match[1])
-
-	if err != nil {
-		log.Println(err)
-		return false
-	}
-
-	*out = string(data)
-	return true
-}
-
-func ParseName(payload []byte, out *string) bool {
-	if payload == nil || out == nil {
-		return false
-	}
-
-	match := CharacterNameRegExp.FindSubmatch(payload)
-
-	if match == nil {
-		return false
-	}
-
-	data := make([]byte, hex.DecodedLen(len(match[1])))
-	_, err := hex.Decode(data, match[1])
-
-	if err != nil {
-		log.Println(err)
-		return false
-	}
-
-	*out = string(data)
-	return true
-}
-
-func ParsePosition(payload []byte, out *Point) bool {
-	if payload == nil || out == nil {
-		return false
-	}
-
-	match := CharacterPositionRegExp.FindSubmatch(payload)
-
-	if match == nil {
-		return false
-	}
-
-	position := make([]byte, hex.DecodedLen(len(match[1])))
-	_, err := hex.Decode(position, match[1])
-
-	if err != nil {
-		log.Println(err)
-		return false
-	}
-
-	x := binary.BigEndian.Uint32(position)
-	(*out).X = math.Float32frombits(x)
-
-	position = make([]byte, hex.DecodedLen(len(match[2])))
-	_, err = hex.Decode(position, match[2])
-
-	if err != nil {
-		log.Println(err)
-		return false
-	}
-
-	y := binary.BigEndian.Uint32(position)
-	(*out).Y = math.Float32frombits(y)
-	return true
 }
