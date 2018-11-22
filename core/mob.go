@@ -5,10 +5,10 @@ import (
 )
 
 const (
-	MobIDFormat        = `69([a-z0-9]{8})fc6b006a`
-	MobPositionFormat  = `66([a-z0-9]{8})([a-z0-9]{8})0879`
+	MobIDFormat        = `69([a-f0-9]{8})fc6b006a`
+	MobPositionFormat  = `66([a-f0-9]{8})([a-f0-9]{8})0879`
 	MobStructureFormat = `(1ca.*?fc6b006a)`
-	MobTierFormat      = `0262([a-z0-9]{2})0673`
+	MobTierFormat      = `0262([a-f0-9]{2})0673`
 )
 
 var (
@@ -49,7 +49,7 @@ func ParseMobID(payload []byte, out *uint32) bool {
 		return false
 	}
 
-	return ParseUint32(match, out)
+	return ParseUint32(match[1], out)
 }
 
 func ParseMobPosition(payload []byte, out *Point) bool {
@@ -63,7 +63,7 @@ func ParseMobPosition(payload []byte, out *Point) bool {
 		return false
 	}
 
-	return ParsePoint(match, out)
+	return ParseFloat32(match[1], &out.X) && ParseFloat32(match[2], &out.Y)
 }
 
 func ParseMobs(payload []byte, out map[uint32]Mob) map[uint32]Mob {
@@ -103,5 +103,5 @@ func ParseMobTier(payload []byte, out *byte) bool {
 		return false
 	}
 
-	return ParseByte(match, out)
+	return ParseByte(match[1], out)
 }

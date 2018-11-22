@@ -5,11 +5,12 @@ import (
 )
 
 const (
-	CodeFormat = `fc6b([a-z0-9]{4})`
+	EventCodeFormat      = `fc6b([a-f0-9]{4})`
+	EventStructureFormat = `(06000100.*?fc6b[a-f0-9]{4})`
 )
 
 var (
-	CodeRegExp = regexp.MustCompile(CodeFormat)
+	EventCodeRegExp = regexp.MustCompile(EventCodeFormat)
 )
 
 const (

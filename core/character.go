@@ -5,11 +5,11 @@ import (
 )
 
 const (
-	CharacterAllianceFormat  = `2c7300[a-z0-9]{2}([a-z0-9]{4,10}?)2d78`
-	CharacterIDFormat        = `0069([a-z0-9]{8})0173`
-	CharacterGuildFormat     = `087300[a-z0-9]{2}([a-z0-9]{6,60}?)0978`
-	CharacterNameFormat      = `017300[a-z0-9]{2}([a-z0-9]{6,32}?)02(?:62|79)`
-	CharacterPositionFormat  = `66([a-z0-9]{8})([a-z0-9]{8})0e79`
+	CharacterAllianceFormat  = `2c7300[a-f0-9]{2}([a-f0-9]{4,10}?)2d78`
+	CharacterIDFormat        = `0069([a-f0-9]{8})0173`
+	CharacterGuildFormat     = `087300[a-f0-9]{2}([a-f0-9]{6,60}?)0978`
+	CharacterNameFormat      = `017300[a-f0-9]{2}([a-f0-9]{6,32}?)02(?:62|79)`
+	CharacterPositionFormat  = `66([a-f0-9]{8})([a-f0-9]{8})0e79`
 	CharacterStructureFormat = `(0069.*?fc6b0017)`
 )
 
@@ -41,7 +41,7 @@ func ParseCharacterAlliance(payload []byte, out *string) bool {
 		return false
 	}
 
-	return ParseString(match, out)
+	return ParseString(match[1], out)
 }
 
 func ParseCharacter(payload []byte, out *Character) *Character {
@@ -74,7 +74,7 @@ func ParseCharacterID(payload []byte, out *uint32) bool {
 		return false
 	}
 
-	return ParseUint32(match, out)
+	return ParseUint32(match[1], out)
 }
 
 func ParseCharacterGuild(payload []byte, out *string) bool {
@@ -88,7 +88,7 @@ func ParseCharacterGuild(payload []byte, out *string) bool {
 		return false
 	}
 
-	return ParseString(match, out)
+	return ParseString(match[1], out)
 }
 
 func ParseCharacterName(payload []byte, out *string) bool {
@@ -102,7 +102,7 @@ func ParseCharacterName(payload []byte, out *string) bool {
 		return false
 	}
 
-	return ParseString(match, out)
+	return ParseString(match[1], out)
 }
 
 func ParseCharacterPosition(payload []byte, out *Point) bool {
@@ -116,7 +116,7 @@ func ParseCharacterPosition(payload []byte, out *Point) bool {
 		return false
 	}
 
-	return ParsePoint(match, out)
+	return ParseFloat32(match[1], &out.X) && ParseFloat32(match[2], &out.Y)
 }
 
 func ParseCharacters(payload []byte, out map[uint32]Character) map[uint32]Character {

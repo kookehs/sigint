@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/binary"
 	"encoding/hex"
+	"fmt"
 	"log"
 
 	"github.com/google/gopacket"
@@ -47,6 +48,7 @@ func main() {
 				payload := make([]byte, hex.EncodedLen(len(udp.Payload)))
 				hex.Encode(payload, udp.Payload)
 
+				// TODO: Capture all events, currently rerunning logic on same events
 				events := event.CodeRegExp.FindAllSubmatch(payload, -1)
 
 				if events == nil {
@@ -71,10 +73,14 @@ func main() {
 					case event.Leave:
 						event.ParseLeave(payload, characters)
 					case event.NewMob:
-						core.ParseMobs(payload, mobs)
+						fmt.Println(core.ParseMobs(payload, mobs))
 					case event.CastSpell:
+						action := &core.Action{}
+						core.ParseCastSpell(payload, action)
+						fmt.Println(action)
 					case event.NewCharacter:
-						core.ParseCharacters(payload, characters)
+						// NOTE: Event data is now encrypted.
+						// core.ParseCharacters(payload, characters)
 					case event.NewSimpleHarvestableObjectList:
 					case event.PlayerCounts:
 					}

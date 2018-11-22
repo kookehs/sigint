@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	LeaveFormat = `0069([a-z0-9]{8})fc6b0001`
+	LeaveFormat = `0069([a-f0-9]{8})fc6b0001`
 )
 
 var (
